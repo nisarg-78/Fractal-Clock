@@ -27,19 +27,35 @@ function clearCanvas() {
 }
 
 function draw() {
-	const canvas = document.getElementById("canvas")
-	const ctx = canvas.getContext("2d")
 	clearCanvas()
 
+	const canvas = document.getElementById("canvas")
+	const ctx = canvas.getContext("2d")
+	const origin = { x: 0, y: 0 }
 	const date = new Date()
-	const hr = date.getHours() % 12
-	const min = date.getMinutes()
-	const sec = date.getSeconds()
-	const ms = date.getMilliseconds()
 
-	const sec_degree = (sec + ms / 1000) * 6
-	const min_degree = min * 6
+	// draw hr hand
+	const hr = date.getHours()
 	const hr_degree = hr * 30
+	ctx.beginPath()
+	ctx.lineWidth = 5
+	ctx.strokeStyle = "white"
+	ctx.moveTo(origin.x, origin.y)
+	const hr_end = getEnd(origin, 50, hr_degree)
+	ctx.lineTo(hr_end.x, hr_end.y)
+	ctx.stroke()
+
+
+	function recur(depth, date, point) {
+		if (depth === 0) {
+			return
+		}
+		const { min_end, sec_end } = drawMinAndSec(date, point, 0, depth)
+		recur(depth - 1, date, min_end)
+		recur(depth - 1, date, sec_end)
+	}
+
+	recur(4, date, origin)
 
 	// drawHand((length = 130), (angle = hr_degree), (color = "#023e8a"))
 	// min_cords = drawHand(
@@ -49,19 +65,16 @@ function draw() {
 	// 	(color = "#0077b6"),
 	//     depth = 2,
 	// )
-	sec_cords = drawHand(
-		{ x: 0, y: 0 },
-		(length = 190),
-		(angle = sec_degree),
-		(color = "#0096c7"),
-		(depth = 3)
-		// (min_angle = min_degree)
-	)
+	// sec_cords = drawHand(
+	// 	{ x: 0, y: 0 },
+	// 	(length = 190),
+	// 	(angle = sec_degree),
+	// 	(color = "#0096c7"),
+	// 	(depth = 3)
+	// 	// (min_angle = min_degree)
+	// )
 	// drawDot(min_cords.x, min_cords.y)
-	drawDot(sec_cords.x, sec_cords.y)
-
-	// drawMinAndSec(sec_cords, min_degree, sec_degree)
-	drawDot()
+	// drawDot(sec_cords.x, sec_cords.y)
 
 	window.requestAnimationFrame(draw)
 }
@@ -74,7 +87,7 @@ function drawHand(
 	depth = 2
 	// min_angle = null
 ) {
-    const canvas = document.getElementById("canvas")
+	const canvas = document.getElementById("canvas")
 	const ctx = canvas.getContext("2d")
 	const x = length * Math.cos((angle * Math.PI) / 180)
 	const y = length * Math.sin((angle * Math.PI) / 180)
@@ -84,9 +97,8 @@ function drawHand(
 	ctx.moveTo(start.x, start.y)
 	ctx.lineTo(start.x + x, start.y + y)
 	ctx.stroke()
-    drawDot(start.x + x, start.y + y)
 	if (depth > 0) {
-        drawHand(
+		drawHand(
 			(start = { x, y }),
 			(length = length * 0.75),
 			(angle = angle),
@@ -98,32 +110,52 @@ function drawHand(
 	return { x, y, depth }
 }
 
-function drawMinAndSec(point, min_degree, sec_degree) {
-	length = 150
+function drawMinAndSec(date, point, angleOffset, depth) {
+	const min = date.getMinutes()
+	const sec = date.getSeconds()
+	const ms = date.getMilliseconds()
+	const sec_degree = (sec + ms / 1000) * 6
+	const min_degree = min * 6
+
 	const canvas = document.getElementById("canvas")
 	const ctx = canvas.getContext("2d")
-	x = point.x
-	y = point.y
-	ctx.strokeStyle = "rgba(90,90,90)"
+
+	//draw second hand
 	ctx.beginPath()
-	//minute hand
-	ctx.moveTo(x, y)
-	let end_x = length * Math.cos((min_degree * Math.PI) / 180)
-	let end_y = length * Math.sin((min_degree * Math.PI) / 180)
-	ctx.lineTo(end_x, end_y)
-	//second hand
-	ctx.moveTo(x, y)
-	end_x = length * Math.cos((sec_degree * Math.PI) / 180)
-	end_y = length * Math.sin((sec_degree * Math.PI) / 180)
-	ctx.lineTo(end_x, end_y)
+	ctx.lineWidth = 3
+	ctx.strokeStyle = `rgba(255, 255, 255, ${1 - 1 / depth})`
+	ctx.moveTo(point.x, point.y)
+	const sec_end = getEnd(point, 100, sec_degree + angleOffset)
+	ctx.lineTo(sec_end.x, sec_end.y)
 	ctx.stroke()
+
+	//draw minute hand
+	ctx.beginPath()
+	ctx.lineWidth = 3
+	ctx.strokeStyle = `rgba(255, 255, 255, ${1.1 - 1 / depth})`
+	ctx.moveTo(point.x, point.y)
+	const min_end = getEnd(point, 70, min_degree + angleOffset)
+	ctx.lineTo(min_end.x, min_end.y)
+	ctx.stroke()
+
+	drawDot(point)
+
+	return { min_end, sec_end }
 }
 
-function drawDot(x = 0, y = 0) {
+function getEnd(point, length, angle) {
+	const x = length * Math.cos((angle * Math.PI) / 180)
+	const y = length * Math.sin((angle * Math.PI) / 180)
+	return { x: point.x + x, y: point.y + y }
+}
+
+function drawDot(point) {
 	const canvas = document.getElementById("canvas")
 	const ctx = canvas.getContext("2d")
+	const x = point.x
+	const y = point.y
 	ctx.beginPath()
-	ctx.arc(x, y, 5, 0, 2 * Math.PI)
+	ctx.arc(x, y, 2, 0, 2 * Math.PI)
 	ctx.fillStyle = "lightblue"
 	ctx.fill()
 }
