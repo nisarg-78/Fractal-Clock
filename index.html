@@ -13,12 +13,22 @@
     <script src="script.js" defer></script>
 
     <div class="toolbar">
-        <label for="depth">Depth: </label>
-        <input type="range" id="depth" min="0" max="10" value="5" onchange="uiParameters">
-        <label for="length">Length: </label>
-        <input type="range" id="length" min="0" max="10" value="5" onchange="uiParameters">
-        <label for="color">Color: </label>
-        <input type="range" id="color" min="0" max="100" value="30" onchange="uiParameters">
+        <div>
+            <label for="depth">Depth:</label>
+            <input type="range" id="depth" min="0" max="10" value="3">
+        </div>
+        <div>
+            <label for="length">Length:</label>
+            <input type="range" id="length" min="0" max="10" value="5">
+        </div>
+        <div>
+            <label for="color">Color:</label>
+            <input type="range" id="color" min="0" max="361" value="361">
+        </div>
+        <div>
+            <label for="opacity">Opacity:</label>
+            <input type="range" id="opacity" min="0" max="10" value="3">
+        </div>
     </div>
 
 </body>

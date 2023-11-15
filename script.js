@@ -36,7 +36,14 @@ function draw() {
 	// draw hr hand
 	ctx.beginPath()
 	ctx.lineWidth = 2
-	ctx.strokeStyle = `hsl(${parseInt(document.getElementById("color").value, 10)}, 100%, 50%)`
+	const hue = parseInt(document.getElementById("color").value, 10)
+	let hsl;
+	if(hue === 361) {
+		hsl = `hsl(0, 0%, 100%)`
+	} else {
+		hsl = `hsl(${hue}, 100%, 50%)`
+	}
+	ctx.strokeStyle = hsl
 	ctx.moveTo(origin.x, origin.y)
 	const hr_end = getEnd(
 		origin,
@@ -77,7 +84,8 @@ function drawMinAndSec(date, point, depth, maxDepth, angleOffset, length) {
 	const min_degree = min * 6 + sec_degree / 60
 
 	const level = depth / maxDepth
-	const alpha = level === 1 ? 1 : depth / (maxDepth + 6)
+	const opacity = parseInt(document.getElementById("opacity").value, 10)
+	const alpha = level === 1 ? 1 : depth / (maxDepth / maxDepth + opacity)
 
 	if (level === 1) {
 		ctx.lineWidth = 2
