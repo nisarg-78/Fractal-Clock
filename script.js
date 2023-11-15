@@ -25,93 +25,94 @@ function draw() {
 	const origin = { x: 0, y: 0 }
 	const date = new Date()
 
-	// draw hr hand
 	const hr = date.getHours()
-	const hr_degree = hr * 30
+	const min = date.getMinutes()
+	const sec = date.getSeconds()
+	const ms = date.getMilliseconds()
+	const sec_degree = (sec + ms / 1000) * 6
+	const min_degree = min * 6 + sec_degree / 60
+	const hr_degree = hr * 30 + min_degree / 12 + sec_degree / 720
+
+	// draw hr hand
 	ctx.beginPath()
 	ctx.lineWidth = 2
-	ctx.strokeStyle = "white"
+	ctx.strokeStyle = `hsl(${parseInt(document.getElementById("color").value, 10)}, 100%, 50%)`
 	ctx.moveTo(origin.x, origin.y)
-	const hr_end = getEnd(origin, 50, hr_degree)
+	const hr_end = getEnd(
+		origin,
+		parseInt(document.getElementById("length").value * 30, 10) * 0.65,
+		hr_degree
+	)
 	ctx.lineTo(hr_end.x, hr_end.y)
 	ctx.stroke()
 
-	function recur(depth, maxDepth, date, point) {
-		if (depth === 0) {
-			return
-		}
-		const { min_end, sec_end } = drawMinAndSec(date, point, depth, maxDepth)
-		recur(depth - 1, maxDepth, date, min_end)
-		recur(depth - 1, maxDepth, date, sec_end)
-	}
+	function recur(depth, maxDepth, date, point, angleOffset = 0) {
+		if (depth === 0) return
 
-	recur(7, 7, date, origin)
+		const { min_end, sec_end, newOffset, newLength } = drawMinAndSec(
+			date,
+			point,
+			depth,
+			maxDepth,
+			angleOffset,
+			parseInt(document.getElementById("length").value * 30, 10)
+		)
+		recur(depth - 1, maxDepth, date, min_end, newOffset.m, newLength)
+		recur(depth - 1, maxDepth, date, sec_end, newOffset.s, newLength)
+	}
+	depth = parseInt(document.getElementById("depth").value, 10)
+	maxDepth = depth
+	recur(depth + 1, maxDepth + 1, date, origin)
 
 	window.requestAnimationFrame(draw)
 }
 
-function drawHand(
-	start = { x: 0, y: 0 },
-	length = 150,
-	angle = 0,
-	color = "white",
-	depth = 2
-	// min_angle = null
-) {
-	const canvas = document.getElementById("canvas")
-	const ctx = canvas.getContext("2d")
-	const x = length * Math.cos((angle * Math.PI) / 180)
-	const y = length * Math.sin((angle * Math.PI) / 180)
-	ctx.beginPath()
-	ctx.lineWidth = 5
-	ctx.strokeStyle = color
-	ctx.moveTo(start.x, start.y)
-	ctx.lineTo(start.x + x, start.y + y)
-	ctx.stroke()
-	if (depth > 0) {
-		drawHand(
-			(start = { x, y }),
-			(length = length * 0.75),
-			(angle = angle),
-			(color = `rgba(56, 102, 65, ${1 - 1 / depth})`),
-			(depth = depth - 1)
-			// angle
-		)
-	}
-	return { x, y, depth }
-}
-
-function drawMinAndSec(date, point, depth, maxDepth) {
+function drawMinAndSec(date, point, depth, maxDepth, angleOffset, length) {
 	const canvas = document.getElementById("canvas")
 	const ctx = canvas.getContext("2d")
 	const min = date.getMinutes()
 	const sec = date.getSeconds()
 	const ms = date.getMilliseconds()
 	const sec_degree = (sec + ms / 1000) * 6
-	const min_degree = min * 6
+	const min_degree = min * 6 + sec_degree / 60
 
-	// TODO: find some magic formula for this angleOffset
-	const angleOffset = (Math.min(minHrAngle(date), minSecAngle(date)) + 90)  * depth / maxDepth
+	const level = depth / maxDepth
+	const alpha = level === 1 ? 1 : depth / (maxDepth + 6)
 
+	if (level === 1) {
+		ctx.lineWidth = 2
+	} else {
+		ctx.lineWidth = 1
+	}
 	//draw second hand
 	ctx.beginPath()
-	ctx.lineWidth = 1
-	ctx.strokeStyle = `rgba(255, 255, 255, ${depth / maxDepth})`
+	ctx.globalAlpha = alpha
 	ctx.moveTo(point.x, point.y)
-	const sec_end = getEnd(point, 100, sec_degree + angleOffset)
+	const sec_end = getEnd(point, length, sec_degree + angleOffset)
 	ctx.lineTo(sec_end.x, sec_end.y)
 	ctx.stroke()
 
 	//draw minute hand
 	ctx.beginPath()
-	ctx.lineWidth = 1
-	ctx.strokeStyle = `rgba(255, 255, 255, ${depth / maxDepth})`
 	ctx.moveTo(point.x, point.y)
-	const min_end = getEnd(point, 70, min_degree + angleOffset)
+	const min_end = getEnd(point, length, min_degree + angleOffset)
 	ctx.lineTo(min_end.x, min_end.y)
 	ctx.stroke()
 
-	return { min_end, sec_end }
+	ctx.globalAlpha = 1
+
+	const newOffset = {
+		m:
+			min_degree +
+			angleOffset +
+			Math.min(180 - minHrAngle(date), minHrAngle(date) + 10),
+		s:
+			sec_degree +
+			angleOffset +
+			Math.min(180 - minHrAngle(date), minHrAngle(date) + 10),
+	}
+
+	return { min_end, sec_end, newOffset, newLength: length }
 }
 
 function getEnd(point, length, angle) {
@@ -120,37 +121,13 @@ function getEnd(point, length, angle) {
 	return { x: point.x + x, y: point.y + y }
 }
 
-function drawDot(point) {
-	const canvas = document.getElementById("canvas")
-	const ctx = canvas.getContext("2d")
-	const x = point.x
-	const y = point.y
-	ctx.beginPath()
-	ctx.arc(x, y, 2, 0, 2 * Math.PI)
-	ctx.fillStyle = "lightblue"
-	ctx.fill()
-}
-
 function minHrAngle(date) {
 	const hr = date.getHours()
 	const min = date.getMinutes()
 	const hr_degree = hr * 30
 	const min_degree = min * 6
 	const angle = hr_degree + min_degree / 12
-	return angle
-}
-
-function minSecAngle(date) {
-	const sec = date.getSeconds()
-	const min = date.getMinutes()
-	const sec_degree = (sec + date.getMilliseconds() / 1000) * 6
-	const min_degree = min * 6
-	const angle = min_degree + sec_degree / 60
-	return angle
-}
-
-function lerp(start, end, amt) {
-	return (1 - amt) * start + amt * end
+	return angle % 360
 }
 
 main()
