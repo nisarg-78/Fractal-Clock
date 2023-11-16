@@ -1,29 +1,26 @@
 function main() {
+	let toolbar = document.getElementById("toolbar")
+	toolbar.addEventListener("mouseover", () => {
+		document.getElementById("toolbar").style.opacity = 1
+	})
+	toolbar.addEventListener("mouseout", () => {
+		document.getElementById("toolbar").style.opacity = 0
+	})
 	const canvas = document.getElementById("canvas")
 	const ctx = canvas.getContext("2d")
-	ctx.canvas.width = window.innerWidth
-	ctx.canvas.height = window.innerHeight
-	ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2)
-	ctx.rotate((-90 * Math.PI) / 180)
-	ctx.fillStyle = "transparent"
-	draw(ctx)
+	window.onresize = function () {
+		setupCanvas(ctx)
+	}
+	setupCanvas(ctx)
+	function animate() {
+		draw(ctx)
+		window.requestAnimationFrame(animate)
+	}
+
+	animate()
 }
 
-function handleHover() {
-	let element = document.getElementById("toolbar")
-	element.style.opacity = 1
-}
-function handleMouseOut() {
-	let element = document.getElementById("toolbar")
-	element.style.opacity = 0
-}
-let element = document.getElementById("toolbar")
-element.addEventListener("mouseover", handleHover)
-element.addEventListener("mouseout", handleMouseOut)
-
-window.onresize = function () {
-	const canvas = document.getElementById("canvas")
-	const ctx = canvas.getContext("2d")
+function setupCanvas(ctx) {
 	ctx.canvas.width = window.innerWidth
 	ctx.canvas.height = window.innerHeight
 	ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2)
@@ -40,10 +37,8 @@ function clearCanvas() {
 	ctx.restore()
 }
 
-function draw() {
+function draw(ctx) {
 	clearCanvas()
-	const canvas = document.getElementById("canvas")
-	const ctx = canvas.getContext("2d")
 	const origin = { x: 0, y: 0 }
 	const date = new Date()
 
@@ -69,7 +64,7 @@ function draw() {
 	ctx.moveTo(origin.x, origin.y)
 	const hr_end = getEnd(
 		origin,
-		parseInt(document.getElementById("length").value * 30, 10) * 0.65,
+		parseInt(document.getElementById("length").value * 3, 10) * 0.65,
 		hr_degree
 	)
 	ctx.lineTo(hr_end.x, hr_end.y)
@@ -79,12 +74,13 @@ function draw() {
 		if (depth === 0) return
 
 		const { min_end, sec_end, newOffset, newLength } = drawMinAndSec(
+			ctx,
 			date,
 			point,
 			depth,
 			maxDepth,
 			angleOffset,
-			parseInt(document.getElementById("length").value * 30, 10)
+			parseInt(document.getElementById("length").value * 3, 10)
 		)
 		recur(depth - 1, maxDepth, date, min_end, newOffset.m, newLength)
 		recur(depth - 1, maxDepth, date, sec_end, newOffset.s, newLength)
@@ -92,13 +88,9 @@ function draw() {
 	depth = parseInt(document.getElementById("depth").value, 10)
 	maxDepth = depth
 	recur(depth + 1, maxDepth + 1, date, origin)
-
-	window.requestAnimationFrame(draw)
 }
 
-function drawMinAndSec(date, point, depth, maxDepth, angleOffset, length) {
-	const canvas = document.getElementById("canvas")
-	const ctx = canvas.getContext("2d")
+function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
 	const min = date.getMinutes()
 	const sec = date.getSeconds()
 	const ms = date.getMilliseconds()
