@@ -9,6 +9,28 @@ function main() {
 	draw(ctx)
 }
 
+function handleHover() {
+	let element = document.getElementById("toolbar")
+	element.style.opacity = 1
+}
+function handleMouseOut() {
+	let element = document.getElementById("toolbar")
+	element.style.opacity = 0
+}
+let element = document.getElementById("toolbar")
+element.addEventListener("mouseover", handleHover)
+element.addEventListener("mouseout", handleMouseOut)
+
+window.onresize = function () {
+	const canvas = document.getElementById("canvas")
+	const ctx = canvas.getContext("2d")
+	ctx.canvas.width = window.innerWidth
+	ctx.canvas.height = window.innerHeight
+	ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2)
+	ctx.rotate((-90 * Math.PI) / 180)
+	ctx.fillStyle = "transparent"
+}
+
 function clearCanvas() {
 	const canvas = document.getElementById("canvas")
 	const ctx = canvas.getContext("2d")
@@ -37,8 +59,8 @@ function draw() {
 	ctx.beginPath()
 	ctx.lineWidth = 2
 	const hue = parseInt(document.getElementById("color").value, 10)
-	let hsl;
-	if(hue === 361) {
+	let hsl
+	if (hue === 361) {
 		hsl = `hsl(0, 0%, 100%)`
 	} else {
 		hsl = `hsl(${hue}, 100%, 50%)`
