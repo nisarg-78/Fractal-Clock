@@ -8,6 +8,7 @@ function main() {
 	})
 	const canvas = document.getElementById("canvas")
 	const ctx = canvas.getContext("2d")
+
 	window.onresize = function () {
 		setupCanvas(ctx)
 	}
@@ -56,11 +57,30 @@ function draw(ctx) {
 	const hue = parseInt(document.getElementById("color").value, 10)
 	let hsl
 	if (hue === 361) {
-		hsl = `hsl(0, 0%, 100%)`
+		ctx.strokeStyle = "white"
 	} else {
-		hsl = `hsl(${hue}, 100%, 50%)`
+		const x = -(
+			parseInt(document.getElementById("length").value * 3, 10) *
+			parseInt(document.getElementById("depth").value, 10)
+		)
+		const y =
+			parseInt(document.getElementById("length").value * 3, 10) *
+			parseInt(document.getElementById("depth").value, 10)
+		const gradient = ctx.createLinearGradient(x, 0, y, 0)
+		gradient.addColorStop(0, hslHue(hue))
+		gradient.addColorStop(1 / 6, hslHue(hue - 270))
+		gradient.addColorStop(2 / 6, hslHue(hue - 90))
+		gradient.addColorStop(3 / 6, hslHue(hue))
+		gradient.addColorStop(4 / 6, hslHue(hue - 90))
+		gradient.addColorStop(5 / 6, hslHue(hue - 270))
+		gradient.addColorStop(1, hslHue(hue - 180))
+		ctx.strokeStyle = gradient
 	}
-	ctx.strokeStyle = hsl
+
+	function hslHue(hue) {
+		return `hsl(${Math.abs(hue)} 100% 50%)`
+	}
+
 	ctx.moveTo(origin.x, origin.y)
 	const hr_end = getEnd(
 		origin,
@@ -73,7 +93,7 @@ function draw(ctx) {
 	function recur(depth, maxDepth, date, point, angleOffset = 0) {
 		if (depth === 0) return
 
-		const { min_end, sec_end, newOffset, newLength } = drawMinAndSec(
+		const { min_end, sec_end, newOffset, length } = drawMinAndSec(
 			ctx,
 			date,
 			point,
@@ -82,8 +102,8 @@ function draw(ctx) {
 			angleOffset,
 			parseInt(document.getElementById("length").value * 3, 10)
 		)
-		recur(depth - 1, maxDepth, date, min_end, newOffset.m, newLength)
-		recur(depth - 1, maxDepth, date, sec_end, newOffset.s, newLength)
+		recur(depth - 1, maxDepth, date, min_end, newOffset.m, length)
+		recur(depth - 1, maxDepth, date, sec_end, newOffset.s, length)
 	}
 	depth = parseInt(document.getElementById("depth").value, 10)
 	maxDepth = depth
@@ -95,20 +115,21 @@ function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
 	const sec = date.getSeconds()
 	const ms = date.getMilliseconds()
 	const sec_degree = (sec + ms / 1000) * 6
-	const min_degree = (min * 6) + (sec_degree / 60)
+	const min_degree = min * 6 + sec_degree / 60
 
 	const level = depth / maxDepth
 	const opacity = parseInt(document.getElementById("opacity").value, 10)
 	const alpha = level === 1 ? 1 : depth / (maxDepth / maxDepth + opacity)
 
 	if (level === 1) {
-		ctx.lineWidth = 2
+		ctx.lineWidth = 2.5
 	} else {
 		ctx.lineWidth = 1
 	}
+
+	ctx.globalAlpha = alpha
 	//draw second hand
 	ctx.beginPath()
-	ctx.globalAlpha = alpha
 	ctx.moveTo(point.x, point.y)
 	const sec_end = getEnd(point, length, sec_degree + angleOffset)
 	ctx.lineTo(sec_end.x, sec_end.y)
@@ -134,7 +155,7 @@ function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
 			Math.min(180 - minHrAngle(date), minHrAngle(date) + 10),
 	}
 
-	return { min_end, sec_end, newOffset, newLength: length }
+	return { min_end, sec_end, newOffset, length }
 }
 
 function getEnd(point, length, angle) {
@@ -150,7 +171,7 @@ function minHrAngle(date) {
 	const ms = date.getMilliseconds()
 	const sec_degree = (sec + ms / 1000) * 6
 	const hr_degree = hr * 30
-	const min_degree = (min * 6) + (sec_degree / 60)
+	const min_degree = min * 6 + sec_degree / 60
 	const angle = hr_degree + min_degree / 12
 	return angle % 360
 }
