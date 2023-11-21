@@ -95,7 +95,7 @@ function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
 	const sec = date.getSeconds()
 	const ms = date.getMilliseconds()
 	const sec_degree = (sec + ms / 1000) * 6
-	const min_degree = min * 6 + sec_degree / 60
+	const min_degree = (min * 6) + (sec_degree / 60)
 
 	const level = depth / maxDepth
 	const opacity = parseInt(document.getElementById("opacity").value, 10)
@@ -146,8 +146,11 @@ function getEnd(point, length, angle) {
 function minHrAngle(date) {
 	const hr = date.getHours()
 	const min = date.getMinutes()
+	const sec = date.getSeconds()
+	const ms = date.getMilliseconds()
+	const sec_degree = (sec + ms / 1000) * 6
 	const hr_degree = hr * 30
-	const min_degree = min * 6
+	const min_degree = (min * 6) + (sec_degree / 60)
 	const angle = hr_degree + min_degree / 12
 	return angle % 360
 }
