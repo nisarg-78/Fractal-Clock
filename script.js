@@ -51,48 +51,40 @@ function draw(ctx) {
 	const min_degree = min * 6 + sec_degree / 60
 	const hr_degree = hr * 30 + min_degree / 12 + sec_degree / 720
 
-	// draw hr hand
-	ctx.beginPath()
-	ctx.lineWidth = 2
-	const hue = parseInt(document.getElementById("color").value, 10)
-	let hsl
-	if (hue === 361) {
+	const length = parseInt(document.getElementById("length").value, 10)
+	const depth = parseInt(document.getElementById("depth").value, 10)
+	const color = document.getElementById("color").checked
+
+	if (!color) {
 		ctx.strokeStyle = "white"
 	} else {
-		const x = -(
-			parseInt(document.getElementById("length").value * 3, 10) *
-			parseInt(document.getElementById("depth").value, 10)
-		)
-		const y =
-			parseInt(document.getElementById("length").value * 3, 10) *
-			parseInt(document.getElementById("depth").value, 10)
+		const x = -(depth * 3 * depth)
+		const y = depth * 3 * depth
 		const gradient = ctx.createLinearGradient(x, 0, y, 0)
-		gradient.addColorStop(0, hslHue(hue))
-		gradient.addColorStop(1 / 6, hslHue(hue - 270))
-		gradient.addColorStop(2 / 6, hslHue(hue - 90))
-		gradient.addColorStop(3 / 6, hslHue(hue))
-		gradient.addColorStop(4 / 6, hslHue(hue - 90))
-		gradient.addColorStop(5 / 6, hslHue(hue - 270))
-		gradient.addColorStop(1, hslHue(hue - 180))
-		ctx.strokeStyle = gradient
+		const hue = sec_degree
+		gradient.addColorStop(0 / 4, hslHue(hue - 180))
+		gradient.addColorStop(1 / 4, hslHue(hue - 90))
+		gradient.addColorStop(2 / 4, hslHue(hue))
+		gradient.addColorStop(3 / 4, hslHue(hue - 90))
+		gradient.addColorStop(4 / 4, hslHue(hue - 180))
+		ctx.strokeStyle = hslHue(hue)
 	}
-
+	
 	function hslHue(hue) {
 		return `hsl(${Math.abs(hue)} 100% 50%)`
 	}
-
+	
+	// draw hr hand
+	ctx.beginPath()
+	ctx.lineWidth = 2
 	ctx.moveTo(origin.x, origin.y)
-	const hr_end = getEnd(
-		origin,
-		parseInt(document.getElementById("length").value * 3, 10) * 0.65,
-		hr_degree
-	)
+	const hr_end = getEnd(origin, length * 3 * 0.65, hr_degree)
 	ctx.lineTo(hr_end.x, hr_end.y)
 	ctx.stroke()
 
+	// recursively draw min and sec hands
 	function recur(depth, maxDepth, date, point, angleOffset = 0) {
 		if (depth === 0) return
-
 		const { min_end, sec_end, newOffset, length } = drawMinAndSec(
 			ctx,
 			date,
@@ -100,14 +92,12 @@ function draw(ctx) {
 			depth,
 			maxDepth,
 			angleOffset,
-			parseInt(document.getElementById("length").value * 3, 10)
+			length * 3
 		)
 		recur(depth - 1, maxDepth, date, min_end, newOffset.m, length)
 		recur(depth - 1, maxDepth, date, sec_end, newOffset.s, length)
 	}
-	depth = parseInt(document.getElementById("depth").value, 10)
-	maxDepth = depth
-	recur(depth + 1, maxDepth + 1, date, origin)
+	recur(depth + 1, depth + 1, date, origin)
 }
 
 function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
