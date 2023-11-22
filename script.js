@@ -51,7 +51,7 @@ function draw(ctx) {
 	const min_degree = min * 6 + sec_degree / 60
 	const hr_degree = hr * 30 + min_degree / 12 + sec_degree / 720
 
-	const length = parseInt(document.getElementById("length").value, 10)
+	const length = parseInt(document.getElementById("length").value, 10) * 3
 	const depth = parseInt(document.getElementById("depth").value, 10)
 	const color = document.getElementById("color").checked
 
@@ -78,24 +78,24 @@ function draw(ctx) {
 	ctx.beginPath()
 	ctx.lineWidth = 2
 	ctx.moveTo(origin.x, origin.y)
-	const hr_end = getEnd(origin, length * 3 * 0.65, hr_degree)
+	const hr_end = getEnd(origin, length * 0.65, hr_degree)
 	ctx.lineTo(hr_end.x, hr_end.y)
 	ctx.stroke()
 
 	// recursively draw min and sec hands
 	function recur(depth, maxDepth, date, point, angleOffset = 0) {
 		if (depth === 0) return
-		const { min_end, sec_end, newOffset, length } = drawMinAndSec(
+		const { min_end, sec_end, newOffset } = drawMinAndSec(
 			ctx,
 			date,
 			point,
 			depth,
 			maxDepth,
 			angleOffset,
-			length * 3
+			length
 		)
-		recur(depth - 1, maxDepth, date, min_end, newOffset.m, length)
-		recur(depth - 1, maxDepth, date, sec_end, newOffset.s, length)
+		recur(depth - 1, maxDepth, date, min_end, newOffset.m)
+		recur(depth - 1, maxDepth, date, sec_end, newOffset.s)
 	}
 	recur(depth + 1, depth + 1, date, origin)
 }
@@ -145,7 +145,7 @@ function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
 			Math.min(180 - minHrAngle(date), minHrAngle(date) + 10),
 	}
 
-	return { min_end, sec_end, newOffset, length }
+	return { min_end, sec_end, newOffset }
 }
 
 function getEnd(point, length, angle) {
