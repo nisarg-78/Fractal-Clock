@@ -84,7 +84,7 @@ function draw(ctx) {
 
 	// recursively draw min and sec hands
 	function recur(depth, maxDepth, date, point, angleOffset = 0) {
-		if (depth === 0) return
+		if (depth === maxDepth) return
 		const { min_end, sec_end, newOffset } = drawMinAndSec(
 			ctx,
 			date,
@@ -94,25 +94,25 @@ function draw(ctx) {
 			angleOffset,
 			length
 		)
-		recur(depth - 1, maxDepth, date, min_end, newOffset.m)
-		recur(depth - 1, maxDepth, date, sec_end, newOffset.s)
+		recur(depth + 1, maxDepth, date, min_end, newOffset.m)
+		recur(depth + 1, maxDepth, date, sec_end, newOffset.s)
 	}
-	recur(depth + 1, depth + 1, date, origin)
+	recur(0, depth + 1, date, origin)
 }
 
-function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
+function drawMinAndSec(ctx, date, point, currDepth, maxDepth, angleOffset, length) {
 	const min = date.getMinutes()
 	const sec = date.getSeconds()
 	const ms = date.getMilliseconds()
 	const sec_degree = (sec + ms / 1000) * 6
 	const min_degree = min * 6 + sec_degree / 60
 
-	const level = depth / maxDepth
-	length = length * level
-	const opacity = parseInt(document.getElementById("opacity").value, 10)
-	const alpha = level === 1 ? 1 : depth / (depth / maxDepth + opacity * 2)
+	if(currDepth > 0){
+		length = length * (1 - (currDepth / 10)) * 0.75
+	}
+	const alpha = currDepth === 0 ? 1 : (1 - (currDepth / 10)) * 0.8
 
-	if (level === 1) {
+	if (currDepth === 0) {
 		ctx.lineWidth = 2
 	} else {
 		ctx.lineWidth = 1
