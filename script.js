@@ -108,11 +108,12 @@ function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
 	const min_degree = min * 6 + sec_degree / 60
 
 	const level = depth / maxDepth
+	length = length * level
 	const opacity = parseInt(document.getElementById("opacity").value, 10)
-	const alpha = level === 1 ? 1 : depth / (maxDepth / maxDepth + opacity)
+	const alpha = level === 1 ? 1 : depth / (depth / maxDepth + opacity * 2)
 
 	if (level === 1) {
-		ctx.lineWidth = 2.5
+		ctx.lineWidth = 2
 	} else {
 		ctx.lineWidth = 1
 	}
@@ -146,6 +147,10 @@ function drawMinAndSec(ctx, date, point, depth, maxDepth, angleOffset, length) {
 	}
 
 	return { min_end, sec_end, newOffset }
+}
+
+function lerp(start, end, percent) {
+	return start + (end - start) * percent
 }
 
 function getEnd(point, length, angle) {
