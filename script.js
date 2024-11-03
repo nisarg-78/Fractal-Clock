@@ -55,70 +55,48 @@ function draw(ctx) {
 	const depth = parseInt(document.getElementById("depth").value, 10)
 	const color = document.getElementById("color").checked
 
-	if (!color) {
-		ctx.strokeStyle = "white"
-	} else {
-		const x = -(depth * 3 * depth)
-		const y = depth * 3 * depth
-		const gradient = ctx.createLinearGradient(x, 0, y, 0)
-		const hue = sec_degree
-		gradient.addColorStop(0 / 4, hslHue(hue - 180))
-		gradient.addColorStop(1 / 4, hslHue(hue - 90))
-		gradient.addColorStop(2 / 4, hslHue(hue))
-		gradient.addColorStop(3 / 4, hslHue(hue - 90))
-		gradient.addColorStop(4 / 4, hslHue(hue - 180))
-		ctx.strokeStyle = hslHue(hue)
-	}
-	
-	function hslHue(hue) {
-		return `hsl(${Math.abs(hue)} 100% 50%)`
-	}
+	ctx.strokeStyle = color ? `hsl(${Math.abs(sec_degree)} 100% 50%)` : "white"
 	
 	// draw hr hand
 	ctx.beginPath()
 	ctx.lineWidth = 2
 	ctx.moveTo(origin.x, origin.y)
-	const hr_end = getEnd(origin, length * 0.65, hr_degree)
+	const hr_end = getEnd(origin, length * 0.55, hr_degree)
 	ctx.lineTo(hr_end.x, hr_end.y)
 	ctx.stroke()
 
 	// recursively draw min and sec hands
-	function recur(depth, maxDepth, date, point, angleOffset = 0) {
-		if (depth === maxDepth) return
+	function recur(currDepth, maxDepth, date, point, angleOffset = 0) {
+		if (currDepth === maxDepth) return
 		const { min_end, sec_end, newOffset } = drawMinAndSec(
 			ctx,
 			date,
 			point,
-			depth,
-			maxDepth,
+			currDepth,
 			angleOffset,
 			length
 		)
-		recur(depth + 1, maxDepth, date, min_end, newOffset.m)
-		recur(depth + 1, maxDepth, date, sec_end, newOffset.s)
+		recur(currDepth + 1, maxDepth, date, min_end, newOffset.m)
+		recur(currDepth + 1, maxDepth, date, sec_end, newOffset.s)
 	}
 	recur(0, depth + 1, date, origin)
 }
 
-function drawMinAndSec(ctx, date, point, currDepth, maxDepth, angleOffset, length) {
+function drawMinAndSec(ctx, date, point, currDepth, angleOffset, length) {
 	const min = date.getMinutes()
 	const sec = date.getSeconds()
 	const ms = date.getMilliseconds()
 	const sec_degree = (sec + ms / 1000) * 6
 	const min_degree = min * 6 + sec_degree / 60
 
-	if(currDepth > 0){
-		length = length * (1 - (currDepth / 10)) * 0.75
-	}
-	const alpha = currDepth === 0 ? 1 : (1 - (currDepth / 10)) * 0.8
+	if (currDepth === 0) ctx.lineWidth = 2
+	else ctx.lineWidth  = (1 - (currDepth / 10)) 
 
-	if (currDepth === 0) {
-		ctx.lineWidth = 2
-	} else {
-		ctx.lineWidth = 1
-	}
+	if (currDepth > 0) length = length * (1 - (currDepth / 10))
 
+	const alpha = (currDepth === 0) ? 1 : (1 - (currDepth / 10))
 	ctx.globalAlpha = alpha
+
 	//draw second hand
 	ctx.beginPath()
 	ctx.moveTo(point.x, point.y)
@@ -139,18 +117,14 @@ function drawMinAndSec(ctx, date, point, currDepth, maxDepth, angleOffset, lengt
 		m:
 			min_degree +
 			angleOffset +
-			Math.min(180 - minHrAngle(date), minHrAngle(date) + 10),
+			Math.min(180 - minHrAngle(date), minHrAngle(date)),
 		s:
 			sec_degree +
 			angleOffset +
-			Math.min(180 - minHrAngle(date), minHrAngle(date) + 10),
+			Math.min(180 - minHrAngle(date), minHrAngle(date)),
 	}
 
 	return { min_end, sec_end, newOffset }
-}
-
-function lerp(start, end, percent) {
-	return start + (end - start) * percent
 }
 
 function getEnd(point, length, angle) {
